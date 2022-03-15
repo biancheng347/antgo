@@ -4,68 +4,69 @@ import (
 	"sync"
 )
 
+type Key = interface{}
+
 //Map parameter structure
 type Map struct {
-	Map  map[interface{}]interface{} //
-	lock sync.RWMutex           // 加锁
+	Map  map[Key]interface{} //
+	lock sync.RWMutex        // 加锁
 }
 
 //New ...
 func New() *Map {
-	return &Map{Map: make(map[interface{}]interface{})}
+	return &Map{Map: make(map[Key]interface{})}
 }
 
 //Set ...
-func (m *Map) Set(key interface{}, value interface{}) {
+func (m *Map) Set(key Key, value interface{}) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
 	m.Map[key] = value
 }
 
 //Get ...
-func (m *Map) Get(key interface{}) interface{} {
+func (m *Map) Get(key Key) interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	_, err := m.Map[key]
-	if err {
-		return nil
-	}
-	return m.Map[key]
+
+	v, _ := m.Map[key]
+	return v
 }
 
 //GetOrSet ...
-func (m *Map) GetOrSet(key interface{}, value interface{}) interface{} {
+func (m *Map) GetOrSet(key Key, value interface{}) interface{} {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	_, err := m.Map[key]
-	if err {
+
+	v, ok := m.Map[key]
+	if !ok {
 		m.Map[key] = value
 		return value
 	}
-	return m.Map[key]
+	return v
 }
 
 //Count ...
 func (m *Map) Count() int {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
+
 	return len(m.Map)
 }
 
 //Delete ...
-func (m *Map) Delete(key interface{}) bool {
+func (m *Map) Delete(key Key) bool {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
 	delete(m.Map, key)
-	_, err := m.Map[key]
-	if err {
-		return false
-	}
-	return true
+	_, ok := m.Map[key]
+	return !ok
 }
 
 //LockFunc locks writing by callback function <f>
-func (m *Map) LockFunc(f func(Map map[interface{}]interface{})) *Map {
+func (m *Map) LockFunc(f func(Map map[Key]interface{})) *Map {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -73,6 +74,7 @@ func (m *Map) LockFunc(f func(Map map[interface{}]interface{})) *Map {
 	return m
 }
 
+/*
 //ReadLockFunc locks writing by callback function <f>
 func (m *Map) ReadLockFunc(f func(Map map[interface{}]interface{})) *Map {
 	m.lock.RLock()
@@ -81,3 +83,4 @@ func (m *Map) ReadLockFunc(f func(Map map[interface{}]interface{})) *Map {
 	f(m.Map)
 	return m
 }
+*/

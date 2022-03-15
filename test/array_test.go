@@ -25,7 +25,7 @@ func TestArray(t *testing.T) {
 	fmt.Println(a.Get(0))
 
 	// 在指定索引前插入数据项
-	a.InsertAfter(9, 8888)
+	a.Insert(9, 8888)
 	// 在指定索引后插入数据项
 
 	fmt.Println(a.List())
