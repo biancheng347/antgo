@@ -51,7 +51,7 @@ func (a *ArrayT[T]) Delete(index int) (t T, err error) {
 	defer a.lock.Unlock()
 
 	if index < 0 || index >= len([]T(a.Slice)) {
-		err = fmt.Errorf("invalid index %d", index)
+		err = fmt.Errorf("invalid Delete index %d", index)
 		return
 	}
 	t = a.Slice[index]
@@ -75,7 +75,7 @@ func (a *ArrayT[T]) Get(index int) (t T, err error) {
 	defer a.lock.RUnlock()
 
 	if index < 0 || index >= len([]T(a.Slice)) {
-		err = fmt.Errorf("invalid index %d", index)
+		err = fmt.Errorf("invalid Get index %d", index)
 		return
 	}
 	return a.Slice[index], nil
