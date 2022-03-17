@@ -1,13 +1,16 @@
 package array
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
-type ArrayT[T any] struct {
+type ArrayT[T comparable] struct {
 	Slice []T
 	lock  sync.RWMutex // 加锁
 }
 
-func NewT[T any]() *ArrayT[T] {
+func NewT[T comparable]() *ArrayT[T] {
 	return &ArrayT[T]{Slice: make([]T, 0)}
 }
 
@@ -15,21 +18,17 @@ func (a *ArrayT[T]) Append(value T) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	a.Slice = append(a.Slice, value)
+	a.Slice = append([]T(a.Slice), value)
 }
 
-/*
-
-//Len Count Array
-func (a *Array) Len() int {
+func (a *ArrayT[T]) Len() int {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
 
-	return len(a.Slice)
+	return len([]T(a.Slice))
 }
 
-//List Array
-func (a *Array) List() []interface{} {
+func (a *ArrayT[T]) List() []T {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
 
@@ -37,54 +36,52 @@ func (a *Array) List() []interface{} {
 }
 
 //Insert Array
-func (a *Array) Insert(index int, value interface{}) {
+func (a *ArrayT[T]) Insert(index int, value T) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	var reset = make([]interface{}, 0)
+	var reset = make([]T, 0)
 	prefix := append(reset, a.Slice[index:]...)
-	a.Slice = append(a.Slice[0:index], value)
-	a.Slice = append(a.Slice, prefix...)
+	a.Slice = append([]T(a.Slice[0:index]), value)
+	a.Slice = append([]T(a.Slice), prefix...)
 }
 
-//Delete Array
-func (a *Array) Delete(index int) interface{} {
+func (a *ArrayT[T]) Delete(index int) (t T, err error) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	if index < 0 || index >= len(a.Slice) {
-		return nil
+	if index < 0 || index >= len([]T(a.Slice)) {
+		err = fmt.Errorf("invalid index %d", index)
+		return
 	}
-	value := a.Slice[index]
-	a.Slice = append(a.Slice[:index], a.Slice[index+1:]...)
-	return value
+	t = a.Slice[index]
+	a.Slice = append([]T(a.Slice[:index]), a.Slice[index+1:]...)
+	return
 }
 
-//Set Array
-func (a *Array) Set(index int, value interface{}) bool {
+func (a *ArrayT[T]) Set(index int, value T) bool {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	if index < 0 || index >= len(a.Slice) {
+	if index < 0 || index >= len([]T(a.Slice)) {
 		return false
 	}
 	a.Slice[index] = value
 	return true
 }
 
-//Get Array
-func (a *Array) Get(index int) interface{} {
+func (a *ArrayT[T]) Get(index int) (t T, err error) {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
 
-	if index < 0 || index >= len(a.Slice) {
-		return nil
+	if index < 0 || index >= len([]T(a.Slice)) {
+		err = fmt.Errorf("invalid index %d", index)
+		return
 	}
-	return a.Slice[index]
+	return a.Slice[index], nil
 }
 
-//Search Array
-func (a *Array) Search(value interface{}) int {
+func (a *ArrayT[T]) Search(value T) int {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
 
@@ -96,32 +93,17 @@ func (a *Array) Search(value interface{}) int {
 	return -1
 }
 
-//Clear Array
-func (a *Array) Clear() {
+func (a *ArrayT[T]) Clear() {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	a.Slice = make([]interface{}, 0)
+	a.Slice = make([]T, 0)
 }
 
-//LockFunc locks writing by callback function <f>
-func (a *Array) LockFunc(f func(array []interface{})) *Array {
+func (a *ArrayT[T]) LockFunc(f func(array []T)) *ArrayT[T] {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
 	f(a.Slice)
 	return a
 }
-
-*/
-
-//ReadLockFunc locks writing by callback function <f>
-/*
-func (a *Array) ReadLockFunc(f func(array []interface{})) *Array {
-	a.lock.RLock()
-	defer a.lock.RUnlock()
-
-	f(a.Slice)
-	return a
-}
-*/
